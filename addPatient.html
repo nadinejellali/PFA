@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
+    <script src="contract.js"></script>
+    <link href='https://www.unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" type="text/css" href="admin_style.css?v=<?php echo time();?>">
+    <title>Add Patient Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="headerContainer"></div>
+
+    <div class="main">
+        <div class="banner">
+            <h1>Add Patient</h1>
+        </div>
+        <div class="title2">
+            <a href="dashboard.html">dashboard/</a><span> add products</span>
+        </div>
+        <section class="form-container">
+            <h1 class="heading">Add Patient</h1>
+            <form action="" method="post" enctype="multipart/form-data">
+                <div class="input-field">
+                    <label for="professionalIDInput">Professional ID:</label>
+                    <input type="text" id="professionalIDInput" name="professionalIDInput"><br><br>
+                </div>
+                <div class="input-field">
+                    <label for="nameInput">Name:</label>
+                    <input type="text" id="nameInput" name="nameInput" placeholder="write Patient Name"><br><br>
+                </div>
+                <div class="input-field">
+                    <label for="emailInput">Email:</label>
+                    <input type="text" id="emailInput" name="emailInput" placeholder="write Patient Email"><br><br>
+                </div>
+                <div class="input-field">
+                    <label for="passInput">Pass Word:</label>
+                    <input type="text" id="passInput" name="passInput" placeholder="write Patient Pass Word"><br><br>
+                </div>
+                <div class="input-field">
+                    <label for="NumberInput">phone Number:</label>
+                    <input type="text" id="NumberInput" name="NumberInput" placeholder="write Patient Number" ><br><br>
+                </div>
+                <div class="input-field">
+                    <label for="addresInput">Address:</label>
+                    <input type="text" id="addresInput" name="addresInput" placeholder="write Patient Address "><br><br>
+                </div>
+                <div class="input-field">
+                    <label for="medicalInput">Clinical Report:</label>
+                    <textarea id="medicalInput" name="medicalInput" required maxlength="10000" required placeholder="write medical assessment"></textarea>
+                </div>
+                
+                <button type="button" onclick="submitData()" class="btn">Add Patient</button>
+                <p id="contractArea"></p>
+            </form>
+        </section>
+    </div>
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
+    ></script>
+  
+
+    <script>
+        const fillProfessionalID = async () => {
+            const userId = sessionStorage.getItem("userId");
+            if (userId) {
+                const contract = await connectContract();
+                
+                const userProfile = await contract.methods.getUserProfile(userId).call();
+                const professionalID = userProfile[4]; // La valeur [4] correspond à la 5ème propriété dans le tableau retourné
+                document.getElementById("professionalIDInput").value = professionalID;
+            } else {
+                console.error("User ID not found in session.");
+            }
+        };
+    
+        // Appeler la fonction pour remplir automatiquement le champ Professional ID lors du chargement de la page
+        window.onload = function() {
+            fillProfessionalID();
+            loadHeader();
+        };
+        
+        async function loadHeader() {
+            const headerContainer = document.getElementById("headerContainer");
+            try {
+                const response = await fetch("header.html");
+                if (response.ok) {
+                    const headerHTML = await response.text();
+                    headerContainer.innerHTML = headerHTML;
+                    let userBtn = document.querySelector('#user-btn');
+                    userBtn.addEventListener('click', function () {
+                        let userBox = document.querySelector('.profile-detail');
+                        userBox.classList.toggle('active');
+                    });
+                
+                    // Récupérer l'image et le nom d'utilisateur depuis le smart contrat et les afficher dans le menu de navigation
+                    if (typeof window.ethereum !== "undefined") {
+                        window.web3 = new Web3(window.ethereum);
+                        try {
+                            await window.ethereum.request({ method: "eth_requestAccounts" });
+                            await connectContract();
+
+                            const userId = sessionStorage.getItem("userId");
+                            const UserBasicInfo = await contract.methods.getUserBasicInfo(userId).call();
+                            const userProfile = await contract.methods.getUserProfile(userId).call();
+                            const doctorId = userProfile[4]; // Récupérez l'ID du médecin à partir du profil de l'utilisateur
+
+                            document.getElementById("profileName").innerText = UserBasicInfo[0];
+                            document.getElementById("profileImg").src = "../images/" + extractFilenameFromPath(userProfile[5]);
+
+                            console.log("Fetching patients for doctor with ID:", doctorId);
+                        } catch (error) {
+                            console.error(error);
+                        }
+                    } else {
+                        console.error("Web3 not found. Please install MetaMask.");
+                    }
+                } else {
+                    console.error("Failed to load header:", response.status);
+                }
+            } catch (error) {
+                console.error("Error fetching header:", error);
+            }
+        }
+        function extractFilenameFromPath(fullPath) {
+    // Divise le chemin complet en utilisant le séparateur de chemin (\ ou /)
+    var parts = fullPath.split(/[\\\/]/);
+    // Retourne le dernier élément du tableau qui correspond au nom du fichier
+    return parts[parts.length - 1];
+}
+
+        const submitData = async () => {
+            const name = document.getElementById("nameInput").value;
+            const email = document.getElementById("emailInput").value;
+            const pass = document.getElementById("passInput").value;
+            const number = document.getElementById("NumberInput").value;
+            const addres = document.getElementById("addresInput").value;
+            const medicalInput = document.getElementById("medicalInput").value;
+            const professionalID = document.getElementById("professionalIDInput").value;
+
+            const contract = await connectContract();
+            var params = {
+            name: document.getElementById("nameInput").value,
+            email: document.getElementById("emailInput").value,
+            message: document.getElementById("passInput").value,
+          };
+        
+          const serviceID = "service_hyj58jr";
+          const templateID = "template_1wkx7fm";
+        
+            emailjs.send(serviceID, templateID, params)
+            .then(res=>{
+                document.getElementById("nameInput").value = "";
+                document.getElementById("emailInput").value = "";
+                document.getElementById("passInput").value = "";
+                console.log(res);
+                alert("Your message sent successfully!!")
+        
+            })
+            .catch(err=>console.log(err));
+
+            try {
+                const accounts = await ethereum.request({method: "eth_requestAccounts"});
+                const account = accounts[0];
+                await contract.methods.addPatient(name, email, pass, number, addres, medicalInput, professionalID).send({ from: account });
+                // Afficher un message de succès
+                document.getElementById("addPatientForm").reset();
+                window.location.href = "dashboard";
+
+            } catch (error) {
+                console.error("Error adding patient:", error);
+                // Afficher un message d'erreur
+            }
+        };
+        
+    </script>
+      <script type="text/javascript">
+        (function () {
+          emailjs.init("R8JfZyj0Cf6gljvQA");
+        })();
+      </script>
+       
+</body>
+</html>

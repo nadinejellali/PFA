@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SMART CONTRACT TEST</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
+	<script src="contract.js"></script>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link href='https://www.unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
+		<link rel="stylesheet" type="text/css" href="admin_style.css?v=<?php echo time();?>">
+		<title></title>
+	</head>
+	<body>
+		<div class="main">
+			<section>
+
+    <form id="dataForm">
+		<img src="../images/doctor.png" width="100">
+
+		<h1>Inscrire</h1>
+		
+		<div class="input-field">
+            <label for="nameInput">Name:</label>
+            <input type="text" id="nameInput" name="nameInput"><br><br>
+		</div>
+		<div class="input-field">
+            <label for="emailInput">Email:</label>
+            <input type="text" id="emailInput" name="emailInput"><br><br>
+		</div>
+		<div class="input-field">
+            <label for="passInput">Pass:</label>
+            <input type="text" id="passInput" name="passInput"><br><br>
+		</div>
+        <!-- Ajouter les nouveaux champs ici -->
+        <div class="input-field">
+            <label for="specialtyInput">Specialty:</label>
+            <input type="text" id="specialtyInput" name="specialtyInput"><br><br>
+		</div>
+        <div class="input-field">
+            <label for="phoneInput">Phone Number:</label>
+            <input type="text" id="phoneInput" name="phoneInput"><br><br>
+		</div>
+        <div class="input-field">
+            <label for="addressInput">Professional Address:</label>
+            <input type="text" id="addressInput" name="addressInput"><br><br>
+		</div>
+        <div class="input-field">
+            <label for="regionInput">Country/Region:</label>
+            <input type="text" id="regionInput" name="regionInput"><br><br>
+		</div>
+        <div class="input-field">
+            <label for="idInput">Professional ID:</label>
+            <input type="text" id="idInput" name="idInput"><br><br>
+		</div>
+		<div class="input-field">
+			<label for="photoInput">Photo:</label>
+			<input type="file" id="photoInput" name="photoInput" accept="image/*"><br><br>
+		</div>
+		
+		
+        <div class="input-field">
+            <label for="hoursInput">Consultation start Hours:</label>
+            <input type="time" id="startHour" name="hoursInput"><br><br>
+		</div>
+        <div class="input-field">
+            <label for="hoursInput">Consultation end Hours:</label>
+            <input type="time" id="endHour" name="hoursInput"><br><br>
+		</div>
+        <div class="input-field">
+            <label for="feesInput">Fees:</label>
+            <input type="text" id="feesInput" name="feesInput"><br><br>
+		</div>
+
+        <button type="button" onclick="submitData()" class="btn">Submit Data</button>
+		<p>Vous avez déjà un compte ? <a href="Connecte">Connecte-toi maintenant</a></p>
+
+        <p id="contractArea"></p>
+    </form></section></div>
+
+    <script>
+        let account;
+        let contract;
+		const convertImageToBase64 = async (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        };
+        const connectMetamask = async () => {
+            if(window.ethereum !== "undefined"){
+                const accounts = await ethereum.request({method: "eth_requestAccounts"});
+                account = accounts[0];
+            }
+        }
+		// Ajoutez cette fonction à votre code JavaScript existant
+const handleFileUpload = async () => {
+    const fileInput = document.getElementById("photoInput");
+    const file = fileInput.files[0];
+    const imageData = await convertImageToBase64(file);
+    document.getElementById("photoPreview").src = imageData; // Afficher un aperçu de l'image
+};
+
+// Ajoutez un événement onchange à votre input file pour appeler la fonction handleFileUpload lorsque l'utilisateur sélectionne une image
+document.getElementById("photoInput").addEventListener("change", handleFileUpload);
+
+
+
+        const connectAndSubmit = async () => {
+            await connectMetamask();
+            await connectContract();
+        }
+
+        const submitData = async () => {
+            const name = document.getElementById("nameInput").value;
+            const email = document.getElementById("emailInput").value;
+            const pass = document.getElementById("passInput").value;
+            // Récupérer les valeurs des nouveaux champs
+            const specialty = document.getElementById("specialtyInput").value;
+            const phoneNumber = document.getElementById("phoneInput").value;
+            const address = document.getElementById("addressInput").value;
+            const region = document.getElementById("regionInput").value;
+            const id = document.getElementById("idInput").value;
+            const photo = document.getElementById("photoInput").value;
+            const startHour = document.getElementById("startHour").value;
+            const endHour = document.getElementById("endHour").value;
+            const consultationHours = startHour + " - " + endHour;
+            const fees = document.getElementById("feesInput").value;
+
+
+			
+            await connectAndSubmit();
+
+            try {
+                await contract.methods.addUser(name, email, pass, specialty, phoneNumber, address, region, id, photo, consultationHours, fees).send({ from: account });
+                // Rediriger l'utilisateur vers une autre page ou afficher un message de confirmation
+                window.location.href = "Connecte";
+            } catch (error) {
+                console.error("Error adding user:", error);
+                // Afficher un message d'erreur à l'utilisateur
+            }
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SMART CONTRACT TEST</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
+	<script src="contract.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='https://www.unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" type="text/css" href="admin_style.css?v=<?php echo time();?>">
+    <title></title>
+</head>
+<body>
+    <div class="main">
+        <section>
+            <p id="contractArea"></p>
+
+            <form id="dataForm">
+                <img src="../images/patient.png" width="100">
+                <h1>Connecte</h1>
+                
+                <div class="input-field">
+                    <label for="emailInput">Email:</label>
+                    <input type="text" id="emailInput" name="emailInput"><br><br>
+                </div>
+                <div class="input-field">
+                    <label for="passInput">Pass:</label>
+                    <input type="password" id="passInput" name="passInput"><br><br>
+                </div>
+                <button type="button" onclick="submitData()" class="btn">Submit Data</button>
+            </form>
+        </section>
+    </div>
+
+    <script>
+        let account;
+        let contract;
+
+        const connectMetamask = async () => {
+            if(window.ethereum !== "undefined"){
+                const accounts = await ethereum.request({method: "eth_requestAccounts"});
+                account = accounts[0];
+            }
+        }
+
+
+        const connectAndSubmit = async () => {
+            await connectMetamask();
+            await connectContract();
+        }
+
+        const submitData = async () => {
+            const email = document.getElementById("emailInput").value;
+            const pass = document.getElementById("passInput").value;
+
+            await connectAndSubmit();
+
+            const patientCount = await contract.methods.patientsLength().call();
+            let patientFound = false;
+
+            for (let i = 0; i < patientCount; i++) {
+                const patient = await contract.methods.patients(i).call();
+                if (patient.email === email && patient.pass === pass) {
+                    patientFound = true;
+                    sessionStorage.setItem("patientId", i.toString()); // Enregistrement de l'ID de l'utilisateur en session
+                    break;
+                }
+            }
+
+            if (patientFound) {
+                window.location.href = "homePatient.html";
+            } else {
+                alert("Données incorrectes ou utilisateur non trouvé !");
+            }
+        }
+    </script>
+</body>
+</html>
